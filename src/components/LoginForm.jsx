@@ -1,14 +1,35 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { Alert, Card, Form, Button, InputGroup } from 'react-bootstrap'
 import { FaEyeSlash, FaEye } from 'react-icons/fa6';
 import Loading from './Loading';
-import { get as getUtenti } from '../services/utenti'
+import { AuthContext } from '../contexts/AuthContext.jsx';
+import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [isError, setIsError] = useState(false)
-    const [utenti, setUtenti] = useState([])
+    const { login } = useContext(AuthContext);
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const handleSubmit = async function(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const formDataObj = Object.fromEntries(formData.entries());
+
+        setIsLoading(true)
+        setIsError(false)
+        const tempUser = await login(formDataObj);
+        if (tempUser) {
+            const from = location.state?.from?.pathname || '/';
+            navigate(from)
+        } else {
+            setIsLoading(false);
+            setIsError(true);
+        }
+        
+    }
 
     return <Card style={{ width: '18rem'}}>
         <Card.Header className="text-center">
@@ -16,27 +37,7 @@ export default function LoginForm() {
         </Card.Header>
         <Card.Body>
             { (isError) && <Alert variant="danger">Login fallita.</Alert> }
-            <Form 
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.target);
-                    const formDataObj = Object.fromEntries(formData.entries());
-
-                    setIsLoading(true)
-                    setIsError(false)
-                    const fetchUtenti = async function() {
-                        let tempUtenti = await getUtenti(formDataObj);
-                        setUtenti(tempUtenti);
-                        setIsLoading(false);
-                        if (utenti.length == 1) {
-                            // Loggato!
-                        } else {
-                            setIsError(true)
-                        }
-                    }
-                    fetchUtenti();
-                }}
-            >
+            <Form onSubmit={handleSubmit} >
                 <Form.Group className="mb-3">
                     <Form.Label>Email</Form.Label>
                     <Form.Control name="email" type="email" placeholder="user@example.com" required />
