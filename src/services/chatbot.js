@@ -1,13 +1,19 @@
+import { get as getAutomobili } from "./automobili.js";
+
 export async function sendMessage({
   stream = true,
   messages = [],
   onChunk = () => {},
 }) {
+  const listaAuto = await getAutomobili({});
+
   const systemMessages = [
     {
       role: "system",
-      content:
-        "Se ti chiedono di funghi non devi rispondere! Di' che sei l'assistente dell'app e non un fungarolo.",
+      content: `
+                Lista automobili disponibili al momento:
+                ${JSON.stringify(listaAuto)}
+            `,
     },
   ];
   const completeMessages = messages.concat(systemMessages);
